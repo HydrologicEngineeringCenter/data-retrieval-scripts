@@ -1,4 +1,5 @@
 import urllib.request
+from urllib.request import HTTPError
 from datetime import datetime
 from datetime import timedelta
 import os
@@ -7,13 +8,40 @@ start = datetime(2017, 1, 1, 0, 0)
 end = datetime(2017, 2, 1, 0, 0)
 hour = timedelta(hours=1)
 
+missing_dates = []
+fallback_to_radaronly = True #Enables a post-processing step that will go through the list of missing dates for gage-corrected
+############################# and tries to go get the radar-only values if they exist.
+
+destination = "C:/Data/Meteorology/QPE/test"
+
 date = start
-while date < end:
+
+while date <= end:
     url = "http://mtarchive.geol.iastate.edu/{:04d}/{:02d}/{:02d}/mrms/ncep/GaugeCorr_QPE_01H/GaugeCorr_QPE_01H_00.00_{:04d}{:02d}{:02d}-{:02d}0000.grib2.gz".format(
         date.year, date.month, date.day, date.year, date.month, date.day, date.hour)
-
-    destination = "C:/Temp"
     filename = url.split("/")[-1]
-    f = open(destination + os.sep + filename, 'wb')
-    f.write(urllib.request.urlopen(url).read())
-    date += hour
+    try:
+        fetched_request = urllib.request.urlopen(url)
+    except HTTPError as e:
+        missing_dates.append(date)
+    else:
+        f = open(destination + os.sep + filename, 'wb')
+        f.write(fetched_request.read())
+    finally:
+        date += hour
+f.close()
+
+if fallback_to_radaronly:
+    radar_also_missing = []
+    for date in missing_dates:
+        url = "http://mtarchive.geol.iastate.edu/{:04d}/{:02d}/{:02d}/mrms/ncep/RadarOnly_QPE_01H/RadarOnly_QPE_01H_00.00_{:04d}{:02d}{:02d}-{:02d}0000.grib2.gz".format(
+            date.year, date.month, date.day, date.year, date.month, date.day, date.hour)
+        filename = url.split("/")[-1]
+        try:
+            fetched_request = urllib.request.urlopen(url)
+        except HTTPError as e:
+            radar_also_missing.append(date)
+        else:
+            f = open(destination + os.sep + filename, 'wb')
+            f.write(fetched_request.read())
+f.close()
