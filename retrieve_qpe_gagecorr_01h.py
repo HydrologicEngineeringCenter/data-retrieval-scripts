@@ -4,15 +4,15 @@ from datetime import datetime
 from datetime import timedelta
 import os
 
-start = datetime(2017, 1, 1, 0, 0)
-end = datetime(2017, 2, 1, 0, 0)
+start = datetime(2018, 9, 1, 0, 0)
+end = datetime(2018, 10, 1, 0, 0)
 hour = timedelta(hours=1)
 
 missing_dates = []
 fallback_to_radaronly = True #Enables a post-processing step that will go through the list of missing dates for gage-corrected
 ############################# and tries to go get the radar-only values if they exist.
 
-destination = "C:/Data/Meteorology/QPE/test"
+destination = "C:/Temp/qpe"
 
 date = start
 
@@ -25,11 +25,10 @@ while date <= end:
     except HTTPError as e:
         missing_dates.append(date)
     else:
-        f = open(destination + os.sep + filename, 'wb')
-        f.write(fetched_request.read())
+        with open(destination + os.sep + filename, 'wb') as f:
+            f.write(fetched_request.read())
     finally:
         date += hour
-f.close()
 
 if fallback_to_radaronly:
     radar_also_missing = []
@@ -42,6 +41,5 @@ if fallback_to_radaronly:
         except HTTPError as e:
             radar_also_missing.append(date)
         else:
-            f = open(destination + os.sep + filename, 'wb')
-            f.write(fetched_request.read())
-f.close()
+            with open(destination + os.sep + filename, 'wb') as f:
+                f.write(fetched_request.read())
