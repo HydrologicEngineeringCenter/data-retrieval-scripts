@@ -1,9 +1,5 @@
 # -*- coding: utf-8 -*-
-"""
-Created on Wed Aug  5 13:49:42 2020
 
-@author: RDCRLDDH
-"""
 
 from datetime import datetime
 from datetime import timedelta
