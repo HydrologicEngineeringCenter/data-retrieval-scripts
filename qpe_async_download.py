@@ -1,10 +1,4 @@
 # -*- coding: utf-8 -*-
-"""
-Created on Wed Aug  5 13:49:42 2020
-
-@author: RDCRLDDH
-"""
-
 from datetime import datetime
 from datetime import timedelta
 import os
@@ -15,11 +9,11 @@ import aiohttp
 import async_timeout
 
 
-async def download_coroutine(url, session):
+async def download_coroutine(url, session, destination):
     with async_timeout.timeout(1200):
-        async with session.get(url, timeout=None) as response:
+        async with session.get(url) as response:
             if response.status == 200:
-                fp = r"C:\workspace\ririe\HMS\data\precip" + os.sep + os.path.basename(url)
+                fp = destination + os.sep + os.path.basename(url)
                 with open(fp, 'wb') as f_handle:
                     while True:
                         chunk = await response.content.read(1024)
@@ -30,36 +24,39 @@ async def download_coroutine(url, session):
                 print(url)
             return await response.release()
 
-async def main(loop):
-    
-    start = datetime(2015, 1, 22, 0, 0)
-    end = datetime(2020, 8, 1, 0, 0)
+async def main(loop, tmp, destination):
+
+    async with aiohttp.ClientSession() as session:
+        tasks = [download_coroutine(url, session, destination) for url in tmp]
+        return await asyncio.gather(*tasks)
+
+
+if __name__ == '__main__':
+
+    start = datetime(2018, 12, 1, 0, 0)
+    end = datetime(2019,1, 1, 0, 0)
     hour = timedelta(hours=1)
-    
+    destination = r"C:\workspace\ririe\HMS\data\precip"
+
+    #loop through and see if you already have the file locally
     date = start
     urls = []
     opath = []
     while date < end:
         url = "http://mtarchive.geol.iastate.edu/{:04d}/{:02d}/{:02d}/mrms/ncep/GaugeCorr_QPE_01H/GaugeCorr_QPE_01H_00.00_{:04d}{:02d}{:02d}-{:02d}0000.grib2.gz".format(
         date.year, date.month, date.day, date.year, date.month, date.day, date.hour)
-        destination = r"C:\workspace\ririe\HMS\data\temp"
-        
+
         filename = url.split("/")[-1]
         if not os.path.isfile(destination + os.sep + filename):
             urls.append(url)
             opath.append(destination + os.sep + filename)
         date += hour
-        
-    async with aiohttp.ClientSession() as session:
-        tasks = [download_coroutine(url, session) for url in urls]
-        return await asyncio.gather(*tasks)
 
+    #Split urls into chunks so you wont overwhelm IA mesonet with asyncronous downloads
+    chunk_size = 50
+    chunked_urls = [urls[i * chunk_size:(i + 1) * chunk_size] for i in range((len(urls) + chunk_size - 1) // chunk_size )]
 
-
-
-if __name__ == '__main__':
-
-    loop = asyncio.get_event_loop()
-    
-    results = loop.run_until_complete(main(loop))
-    
+    for tmp in chunked_urls:
+        loop = asyncio.get_event_loop()
+        results = loop.run_until_complete(main(loop, tmp, destination))
+        del loop, results
