@@ -60,10 +60,9 @@ async def dowload_files(paths, dest_dir):
                                 logging.info('local file larger than remote file, removing now')
                                 max_attempts +=1
                                 size = 0
+
                             async with client.download_stream(path, offset=size) as stream:
                                 async for block in stream.iter_by_block():
-                                    if not block:
-                                        break
                                     await local_file.write(block)
                                     
             except aioftp.StatusCodeError as ftp_e:
@@ -130,8 +129,8 @@ if __name__ == '__main__':
     end_date = '2010-10-01'
     drange = pd.date_range(start_date, end_date, freq ='D') 
 
+    #list of dates to download
     month_year = [f'{i.strftime("%Y%m%d")}' for i in drange if i.month not in [8,9]]
-
 
     out_dir = f'output/SNODAS'
 
