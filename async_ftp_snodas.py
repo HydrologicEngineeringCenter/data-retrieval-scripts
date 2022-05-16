@@ -115,7 +115,7 @@ async def main( month_year, out_dir):
 
     pprint(paths)
     
-    await dowload_files(paths[:1], pathlib.PurePath(out_dir))
+    await dowload_files(paths, pathlib.PurePath(out_dir))
 
 if __name__ == '__main__':
 
