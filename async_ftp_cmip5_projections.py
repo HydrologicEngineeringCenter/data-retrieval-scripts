@@ -55,11 +55,14 @@ async def dowload_files(paths, dest_dir):
 
                             if remote_size == size:
                                 break
+                            elif size > remote_size:
+                                pathlib.Path(dest).unlink()
+                                logging.info('local file larger than remote file, removing now')
+                                max_attempts +=1
+                                size = 0
 
                             async with client.download_stream(path, offset=size) as stream:
                                 async for block in stream.iter_by_block():
-                                    if not block:
-                                        break
                                     await local_file.write(block)
                                     
             except aioftp.StatusCodeError as ftp_e:
