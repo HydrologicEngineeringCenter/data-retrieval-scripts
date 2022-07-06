@@ -33,17 +33,33 @@ async def main(loop, tmp, destination):
 
 if __name__ == '__main__':
 
-    start = datetime(2018, 12, 1, 0, 0)
-    end = datetime(2019,1, 1, 0, 0)
-    hour = timedelta(hours=1)
+    start = datetime(2021, 10, 1, 0, 0)
+    end = datetime(2021, 10, 2, 0, 0)
     destination = r"C:\workspace\ririe\HMS\data\precip"
+    
+    
+    assert start >= datetime(2020,10,15), "MultiSensor MRMS data before 2020-10-15 does not exist, consider looking for GageCorr qpe grids"
+    assert end >= datetime(2020,10,15), "MultiSensor MRMS data before 2020-10-15 does not exist, consider looking for GageCorr qpe grids"
+    
 
+    """
+    https://inside.nssl.noaa.gov/mrms/past-code-updates/
+
+    In the MRMS v12.0 update to NCO section, the third bullet from the bottom:
+    -	Multi-sensor QPE scheme using gauges and model QPFs to fill radar coverage gaps
+    I think that suggests the MultiSensor_QPE is gage corrected.  So the data might have just changed names in the MRMS migration to 12.0.
+    """
+
+    hour = timedelta(hours=1)
+    os.makedirs(destination, exist_ok=True)
+    
     #loop through and see if you already have the file locally
     date = start
     urls = []
     opath = []
     while date < end:
-        url = "http://mtarchive.geol.iastate.edu/{:04d}/{:02d}/{:02d}/mrms/ncep/GaugeCorr_QPE_01H/GaugeCorr_QPE_01H_00.00_{:04d}{:02d}{:02d}-{:02d}0000.grib2.gz".format(
+        
+        url = 'https://mtarchive.geol.iastate.edu/{:04d}/{:02d}/{:02d}/mrms/ncep/MultiSensor_QPE_24H_Pass2/MultiSensor_QPE_24H_Pass2_00.00_{:04d}{:02d}{:02d}-{:02d}0000.grib2.gz'.format(
         date.year, date.month, date.day, date.year, date.month, date.day, date.hour)
 
         filename = url.split("/")[-1]
