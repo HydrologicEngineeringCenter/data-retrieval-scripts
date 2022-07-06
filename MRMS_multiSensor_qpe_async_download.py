@@ -59,7 +59,7 @@ if __name__ == '__main__':
     opath = []
     while date < end:
         
-        url = 'https://mtarchive.geol.iastate.edu/{:04d}/{:02d}/{:02d}/mrms/ncep/MultiSensor_QPE_24H_Pass2/MultiSensor_QPE_24H_Pass2_00.00_{:04d}{:02d}{:02d}-{:02d}0000.grib2.gz'.format(
+        url = 'https://mtarchive.geol.iastate.edu/{:04d}/{:02d}/{:02d}/mrms/ncep/MultiSensor_QPE_01H_Pass2/MultiSensor_QPE_01H_Pass2_00.00_{:04d}{:02d}{:02d}-{:02d}0000.grib2.gz'.format(
         date.year, date.month, date.day, date.year, date.month, date.day, date.hour)
 
         filename = url.split("/")[-1]
